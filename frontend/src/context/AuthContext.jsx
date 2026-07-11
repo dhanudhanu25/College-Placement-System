@@ -30,6 +30,7 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post("/auth/login", { email, password, remember });
     if (res.data.success) {
       setUser(res.data.user);
+      if (res.data.token) localStorage.setItem("cpp_token", res.data.token);
       if (remember) {
         localStorage.setItem("remember", "true");
       }
@@ -41,7 +42,10 @@ export const AuthProvider = ({ children }) => {
     const res = await api.post("/auth/signup", payload, {
       headers: { "Content-Type": "multipart/form-data" },
     });
-    if (res.data.success) setUser(res.data.user);
+    if (res.data.success) {
+      setUser(res.data.user);
+      if (res.data.token) localStorage.setItem("cpp_token", res.data.token);
+    }
     return res.data;
   };
 
@@ -53,6 +57,7 @@ export const AuthProvider = ({ children }) => {
       // ignore
     }
     localStorage.removeItem("remember");
+    localStorage.removeItem("cpp_token");
     setUser(null);
   };
 
