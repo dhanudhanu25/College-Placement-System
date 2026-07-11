@@ -76,7 +76,20 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ---------- 404 Handler ----------
+// ---------- Serve built frontend (single-service deploy) ----------
+// In production the same Render service can serve both API and SPA.
+const path = require("path");
+const fs = require("fs");
+const distDir = path.resolve(__dirname, "..", "frontend", "dist");
+if (fs.existsSync(distDir)) {
+  app.use(express.static(distDir));
+  // SPA fallback: any non-API GET serves index.html
+  app.get(/^(?!\/api\/).*/, (req, res) => {
+    res.sendFile(path.join(distDir, "index.html"));
+  });
+}
+
+// ---------- 404 Handler (API misses) ----------
 app.use((req, res, next) => {
   res.status(404).json({
     success: false,
