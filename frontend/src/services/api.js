@@ -1,0 +1,38 @@
+import axios from "axios";
+import { toast } from "react-toastify";
+
+const API_URL = import.meta.env.VITE_API_URL || "/api";
+
+const api = axios.create({
+  baseURL: API_URL,
+  withCredentials: true, // send httpOnly cookie
+});
+
+// Response interceptor: handle global errors & auto-logout
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const status = error.response?.status;
+    const message =
+      error.response?.data?.message || "Something went wrong. Please try again.";
+
+    if (status === 401) {
+      // Token expired or unauthorized -> clear local auth state
+      if (localStorage.getItem("remember")) {
+        localStorage.removeItem("remember");
+      }
+      // Reload only if we are not already on the login page
+      if (window.location.pathname !== "/login") {
+        window.dispatchEvent(new Event("auth:logout"));
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 800);
+      }
+    } else if (status === 403) {
+      toast.error(message);
+    }
+    return Promise.reject(error);
+  }
+);
+
+export default api;
